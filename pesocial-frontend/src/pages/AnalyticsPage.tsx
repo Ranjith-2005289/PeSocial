@@ -15,7 +15,10 @@ export default function AnalyticsPage() {
 
   const chartData = analyticsQuery.data
     ? [
-        { label: 'Total Likes', value: analyticsQuery.data.totalLikes, color: '#34d399' },
+        { label: 'Total Likes', value: analyticsQuery.data.totalLikes ?? 0, color: '#34d399' },
+        { label: 'Total Views', value: analyticsQuery.data.totalViews ?? 0, color: '#f59e0b' },
+        { label: 'Followers', value: analyticsQuery.data.followersCount ?? 0, color: '#60a5fa' },
+        { label: 'Following', value: analyticsQuery.data.followingCount ?? 0, color: '#a78bfa' },
         { label: 'Engagement %', value: Number(analyticsQuery.data.engagementRate.toFixed(2)), color: '#60a5fa' },
       ]
     : []
@@ -24,7 +27,7 @@ export default function AnalyticsPage() {
     <div className="mx-auto min-h-screen w-full max-w-5xl p-4 text-white">
       <div className="rounded-xl border border-white/20 bg-white/10 p-6">
         <h1 className="text-2xl font-semibold">Creator Analytics Dashboard</h1>
-        <p className="mt-1 text-sm text-white/75">Track likes and engagement performance.</p>
+        <p className="mt-1 text-sm text-white/75">Track likes, views, followers, and following performance.</p>
 
         {analyticsQuery.isLoading && <p className="mt-6 text-sm text-white/80">Loading analytics...</p>}
 
@@ -36,11 +39,12 @@ export default function AnalyticsPage() {
 
         {analyticsQuery.data && (
           <>
-            <div className="mt-6 grid gap-4 md:grid-cols-4">
-              <MetricCard title="Total Likes" value={analyticsQuery.data.totalLikes} />
+            <div className="mt-6 grid gap-4 md:grid-cols-5">
+              <MetricCard title="Total Likes" value={analyticsQuery.data.totalLikes ?? 0} />
+              <MetricCard title="Total Views" value={analyticsQuery.data.totalViews ?? 0} />
+              <MetricCard title="Followers" value={analyticsQuery.data.followersCount ?? 0} />
+              <MetricCard title="Following" value={analyticsQuery.data.followingCount ?? 0} />
               <MetricCard title="Engagement Rate" value={`${analyticsQuery.data.engagementRate.toFixed(2)}%`} />
-              <MetricCard title="Total Views" value={analyticsQuery.data.totalViews} />
-              <MetricCard title="Followers" value={analyticsQuery.data.followersCount} />
             </div>
 
             <div className="mt-6 h-80 rounded-xl border border-white/20 bg-black/20 p-3">

@@ -11,7 +11,9 @@ import com.pesocial.model.message.ChatRoom;
 import com.pesocial.model.message.Message;
 import com.pesocial.repository.ChatRoomRepository;
 import com.pesocial.repository.MessageRepository;
+import com.pesocial.repository.UserRepository;
 import com.pesocial.service.MessageService;
+import com.pesocial.service.NotificationService;
 
 @Service
 public class MessageServiceImpl implements MessageService {
@@ -19,12 +21,18 @@ public class MessageServiceImpl implements MessageService {
     private final MessageRepository messageRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     public MessageServiceImpl(MessageRepository messageRepository, ChatRoomRepository chatRoomRepository,
-                              SimpMessagingTemplate messagingTemplate) {
+                              SimpMessagingTemplate messagingTemplate,
+                              UserRepository userRepository,
+                              NotificationService notificationService) {
         this.messageRepository = messageRepository;
         this.chatRoomRepository = chatRoomRepository;
         this.messagingTemplate = messagingTemplate;
+        this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -44,6 +52,15 @@ public class MessageServiceImpl implements MessageService {
         chatRoom.updateLastMessage(saved.getMessageId(), saved.getMessageText());
         chatRoom.incrementUnreadCount(request.receiverId());
         chatRoomRepository.save(chatRoom);
+
+        if (request.receiverId() != null && !request.receiverId().equals(request.senderId())) {
+            userRepository.findById(request.senderId()).ifPresent(sender -> {
+                String senderHandle = (sender.getHandle() != null && !sender.getHandle().isBlank())
+                    ? sender.getHandle()
+                    : sender.getUsername();
+                notificationService.sendMessageNotification(request.receiverId(), senderHandle);
+            });
+        }
 
         messagingTemplate.convertAndSendToUser(request.receiverId(), "/queue/messages", saved);
         messagingTemplate.convertAndSendToUser(request.senderId(), "/queue/messages", saved);

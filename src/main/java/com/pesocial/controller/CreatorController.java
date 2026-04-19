@@ -43,6 +43,11 @@ public class CreatorController {
         return ResponseEntity.ok(creatorService.viewAnalytics(creatorId));
     }
 
+    @GetMapping("/{creatorId}/analytics/report")
+    public ResponseEntity<String> analyticsReport(@PathVariable String creatorId) {
+        return ResponseEntity.ok(creatorService.generateAnalyticsReport(creatorId));
+    }
+
     @PatchMapping("/posts/{postId}/pin")
     public ResponseEntity<Void> pinPost(@PathVariable String postId) {
         creatorService.pinPost(postId);

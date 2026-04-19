@@ -8,7 +8,9 @@ public interface AdminService {
     List<User> viewAllUsers();
     User suspendUser(String userId);
     User banUser(String userId);
+    User approveCreator(String userId);
     void removePost(String postId);
     String sendAnnouncement(String message);
     String generateSystemReport();
+    List<String> reviewReports();
 }

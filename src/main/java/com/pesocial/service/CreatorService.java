@@ -9,5 +9,6 @@ public interface CreatorService {
     void startLiveStream();
     boolean enableMonetization(String creatorId);
     CreatorAnalytics viewAnalytics(String creatorId);
+    String generateAnalyticsReport(String creatorId);
     void pinPost(String postId);
 }

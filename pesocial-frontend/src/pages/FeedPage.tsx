@@ -1,20 +1,23 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import CreatePost from '../components/CreatePost'
 import NotificationDropdown from '../components/NotificationDropdown'
 import PostCard from '../components/PostCard'
+import SharePostModal from '../components/SharePostModal'
 import UserSearchBar from '../components/UserSearchBar'
 import StoryBar from '../components/StoryBar'
 import StoryViewerModal from '../components/StoryViewerModal'
 import { useAuth } from '../hooks/useAuth'
 import { useWebSockets } from '../hooks/useWebSockets'
+import { chatService } from '../services/chatService'
 import { parseApiError } from '../services/api'
 import { notificationService } from '../services/notificationService'
 import { postService } from '../services/postService'
 import { userService } from '../services/userService'
 import type { CreatePostPayload } from '../types/post'
 import type { StoryDetailDTO, StoryBarUser } from '../types/story'
+import type { UserSummary } from '../types/user'
 import toast from 'react-hot-toast'
 
 export default function FeedPage() {
@@ -25,8 +28,22 @@ export default function FeedPage() {
   const [selectedStoryUser, setSelectedStoryUser] = useState<StoryBarUser | null>(null)
   const [selectedStories, setSelectedStories] = useState<StoryDetailDTO[]>([])
   const [storyModalOpen, setStoryModalOpen] = useState(false)
+  const [shareModalOpen, setShareModalOpen] = useState(false)
+  const [postToShare, setPostToShare] = useState<import('../types/post').Post | null>(null)
 
   const { connected, notifications } = useWebSockets({ enabled: true })
+
+  const notificationsQuery = useQuery({
+    queryKey: ['notifications', user?.id],
+    queryFn: () => notificationService.getNotifications(user?.id || ''),
+    enabled: Boolean(user?.id),
+  })
+
+  const unreadCountQuery = useQuery({
+    queryKey: ['notifications-unread', user?.id],
+    queryFn: () => notificationService.countUnread(user?.id || ''),
+    enabled: Boolean(user?.id),
+  })
 
   const feedQuery = useQuery({
     queryKey: ['feed-posts'],
@@ -69,6 +86,47 @@ export default function FeedPage() {
     onError: (error) => toast.error(parseApiError(error)),
   })
 
+  const shareToUserMutation = useMutation({
+    mutationFn: async ({ targetUser, post }: { targetUser: UserSummary; post: import('../types/post').Post }) => {
+      if (!user) {
+        throw new Error('Login required')
+      }
+
+      const room = await chatService.createOrGetChatRoom(targetUser.id)
+
+      const senderName = user.handle || user.username || 'A user'
+      const authorName = post.authorName || post.authorId
+      const caption = post.contentText?.trim() ? post.contentText.trim() : 'No caption'
+      const messageText = [
+        '[SHARED_POST]',
+        `Shared by: ${senderName}`,
+        `Author: ${authorName}`,
+        `Caption: ${caption}`,
+        `Post ID: ${post.id}`,
+      ].join('\n')
+
+      const attachmentUrl = post.mediaId ? `/api/media/${post.mediaId}` : post.media?.externalUrl
+
+      await chatService.sendMessage({
+        senderId: user.id,
+        receiverId: targetUser.id,
+        chatRoomId: room.chatRoomId,
+        messageText,
+        attachmentUrl,
+        attachmentType: 'shared-post',
+      })
+
+      await postService.sharePost(post.id)
+    },
+    onSuccess: () => {
+      toast.success('Post shared in chat')
+      setShareModalOpen(false)
+      setPostToShare(null)
+      void queryClient.invalidateQueries({ queryKey: ['feed-posts'] })
+    },
+    onError: (error) => toast.error(parseApiError(error)),
+  })
+
   const becomeCreatorMutation = useMutation({
     mutationFn: () => userService.becomeCreator(),
     onSuccess: (authResponse) => {
@@ -90,12 +148,29 @@ export default function FeedPage() {
   const markAllReadMutation = useMutation({
     mutationFn: () => notificationService.markAllAsRead(user?.id || ''),
     onSuccess: () => {
-      // Notifications will be cleared from WebSocket state automatically
+      void queryClient.invalidateQueries({ queryKey: ['notifications', user?.id] })
+      void queryClient.invalidateQueries({ queryKey: ['notifications-unread', user?.id] })
     },
     onError: (error) => toast.error(parseApiError(error)),
   })
 
-  const unreadNotifications = notifications.length
+  useEffect(() => {
+    if (notifications.length === 0 || !user?.id) {
+      return
+    }
+
+    void queryClient.invalidateQueries({ queryKey: ['notifications', user.id] })
+    void queryClient.invalidateQueries({ queryKey: ['notifications-unread', user.id] })
+  }, [notifications, queryClient, user?.id])
+
+  const displayNotifications = useMemo(() => {
+    if (Array.isArray(notificationsQuery.data) && notificationsQuery.data.length > 0) {
+      return notificationsQuery.data
+    }
+    return notifications
+  }, [notificationsQuery.data, notifications])
+
+  const unreadNotifications = unreadCountQuery.data ?? notifications.length
 
   const handleNotificationToggle = async () => {
     if (!showNotifications && unreadNotifications > 0) {
@@ -138,7 +213,7 @@ export default function FeedPage() {
 
               {showNotifications && (
                 <NotificationDropdown
-                  notifications={notifications}
+                  notifications={displayNotifications}
                   followBackPending={followBackMutation.isPending}
                   onFollowBack={(handle) => followBackMutation.mutateAsync(handle)}
                 />
@@ -202,6 +277,20 @@ export default function FeedPage() {
         onClose={() => setStoryModalOpen(false)}
       />
 
+      <SharePostModal
+        open={shareModalOpen}
+        post={postToShare}
+        currentUserId={user.id}
+        sharing={shareToUserMutation.isPending}
+        onClose={() => {
+          if (!shareToUserMutation.isPending) {
+            setShareModalOpen(false)
+            setPostToShare(null)
+          }
+        }}
+        onShare={(targetUser, post) => shareToUserMutation.mutateAsync({ targetUser, post })}
+      />
+
       {feedQuery.isLoading && <div className="rounded-xl border border-white/20 bg-white/10 p-4 text-white">Loading feed...</div>}
 
       {feedQuery.isError && (
@@ -223,6 +312,10 @@ export default function FeedPage() {
               onLike={(postId) => likeMutation.mutateAsync(postId).then(() => undefined)}
               onComment={(postId, value) => commentMutation.mutateAsync({ postId, value }).then(() => undefined)}
               onDelete={(postId) => deleteMutation.mutateAsync(postId).then(() => undefined)}
+              onShare={async (post) => {
+                setPostToShare(post)
+                setShareModalOpen(true)
+              }}
             />
           ))}
         </div>

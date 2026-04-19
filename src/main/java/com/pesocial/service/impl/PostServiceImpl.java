@@ -105,15 +105,15 @@ public class PostServiceImpl implements PostService {
     public Post addLike(String postId, String currentUserId) {
         Post post = postRepository.findById(postId)
             .orElseThrow(() -> new EntityNotFoundException("Post not found"));
-        post.addLike();
-        Post saved = postRepository.save(post);
+        boolean newlyLiked = post.addLike(currentUserId);
+        Post saved = newlyLiked ? postRepository.save(post) : post;
 
         // Get current user (who is liking) and post author (recipient)
         User currentUser = userRepository.findById(currentUserId).orElse(null);
         User author = userRepository.findById(saved.getAuthorId()).orElse(null);
         
         // Send notification to post author about who liked their post
-        if (currentUser != null && author != null && !currentUserId.equals(author.getId())) {
+        if (newlyLiked && currentUser != null && author != null && !currentUserId.equals(author.getId())) {
             String senderHandle = currentUser.getHandle() != null ? currentUser.getHandle() : currentUser.getUsername();
             notificationService.sendLikeNotification(author.getId(), senderHandle, saved.getId());
         }
@@ -122,11 +122,11 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public Post removeLike(String postId) {
+    public Post removeLike(String postId, String currentUserId) {
         Post post = postRepository.findById(postId)
             .orElseThrow(() -> new EntityNotFoundException("Post not found"));
-        post.removeLike();
-        return postRepository.save(post);
+        boolean removed = post.removeLike(currentUserId);
+        return removed ? postRepository.save(post) : post;
     }
 
     @Override
