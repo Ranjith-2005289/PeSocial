@@ -10,6 +10,7 @@ public interface NotificationService {
     Notification sendFollowNotification(String recipientId, String senderHandle);
     Notification sendLikeNotification(String recipientId, String senderHandle, String postId);
     Notification sendCommentNotification(String recipientId, String senderHandle, String postId, String commentText);
+    Notification sendMessageNotification(String recipientId, String senderHandle);
     Notification markAsRead(String notificationId);
     List<Notification> markAllAsRead(String recipientId);
     void deleteNotification(String notificationId);

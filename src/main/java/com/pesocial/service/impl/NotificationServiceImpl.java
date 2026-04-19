@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import com.pesocial.dto.notification.CreateNotificationRequest;
 import com.pesocial.model.notification.Notification;
 import com.pesocial.model.notification.NotificationType;
+import com.pesocial.model.system.SystemService;
 import com.pesocial.repository.NotificationRepository;
 import com.pesocial.repository.UserRepository;
 import com.pesocial.service.NotificationService;
@@ -19,13 +20,16 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final SystemService systemService;
 
     public NotificationServiceImpl(NotificationRepository notificationRepository,
                                    UserRepository userRepository,
-                                   SimpMessagingTemplate messagingTemplate) {
+                                   SimpMessagingTemplate messagingTemplate,
+                                   SystemService systemService) {
         this.notificationRepository = notificationRepository;
         this.userRepository = userRepository;
         this.messagingTemplate = messagingTemplate;
+        this.systemService = systemService;
     }
 
     @Override
@@ -37,6 +41,12 @@ public class NotificationServiceImpl implements NotificationService {
         notification.setTimestamp(Instant.now());
 
         Notification saved = notificationRepository.save(notification);
+        userRepository.findById(request.recipientId()).ifPresent(recipient -> {
+            recipient.receiveNotification(request.type());
+            userRepository.save(recipient);
+        });
+        systemService.generateNotifications();
+        systemService.logActivity();
         pushRealtimeNotification(saved);
         return saved;
     }
@@ -93,6 +103,20 @@ public class NotificationServiceImpl implements NotificationService {
         Notification saved = notificationRepository.save(notification);
         pushRealtimeNotification(saved);
         return saved;
+    }
+
+    @Override
+    public Notification sendMessageNotification(String recipientId, String senderHandle) {
+        // Duplicate prevention: avoid spamming repeated message notifications in a short window
+        List<Notification> recentMessageNotifications = notificationRepository.findRecentNotifications(
+            recipientId, senderHandle, NotificationType.MESSAGE, Instant.now().minusSeconds(30)
+        );
+
+        if (!recentMessageNotifications.isEmpty()) {
+            return recentMessageNotifications.get(0);
+        }
+
+        return sendNotification(new CreateNotificationRequest(recipientId, senderHandle, NotificationType.MESSAGE));
     }
 
     @Override

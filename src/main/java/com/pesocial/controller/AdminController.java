@@ -39,6 +39,11 @@ public class AdminController {
         return ResponseEntity.ok(adminService.banUser(userId));
     }
 
+    @PostMapping("/users/{userId}/approve-creator")
+    public ResponseEntity<User> approveCreator(@PathVariable String userId) {
+        return ResponseEntity.ok(adminService.approveCreator(userId));
+    }
+
     @DeleteMapping("/posts/{postId}")
     public ResponseEntity<Void> removePost(@PathVariable String postId) {
         adminService.removePost(postId);
@@ -53,5 +58,10 @@ public class AdminController {
     @GetMapping("/reports/system")
     public ResponseEntity<String> report() {
         return ResponseEntity.ok(adminService.generateSystemReport());
+    }
+
+    @GetMapping("/reports/review")
+    public ResponseEntity<List<String>> reviewReports() {
+        return ResponseEntity.ok(adminService.reviewReports());
     }
 }

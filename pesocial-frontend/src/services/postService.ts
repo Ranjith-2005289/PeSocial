@@ -29,6 +29,11 @@ export const postService = {
     return data
   },
 
+  sharePost: async (postId: string) => {
+    const { data } = await api.patch<Post>(`/api/posts/${postId}/share`)
+    return data
+  },
+
   deletePost: async (postId: string) => {
     await api.delete(`/api/posts/${postId}`)
   },

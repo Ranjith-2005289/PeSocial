@@ -16,6 +16,7 @@ import com.pesocial.dto.user.UserSummaryDto;
 import com.pesocial.exception.EntityNotFoundException;
 import com.pesocial.model.analytics.CreatorAnalytics;
 import com.pesocial.model.post.Post;
+import com.pesocial.model.user.Creator;
 import com.pesocial.model.user.User;
 import com.pesocial.model.user.UserRole;
 import com.pesocial.repository.CreatorAnalyticsRepository;
@@ -218,19 +219,21 @@ public class UserServiceImpl implements UserService {
         User existingUser = userRepository.findById(userId)
             .orElseThrow(() -> new EntityNotFoundException("User not found"));
 
-        User creatorUser = existingUser;
-        if (creatorUser.getRole() != UserRole.CREATOR) {
-            creatorUser.setRole(UserRole.CREATOR);
-            creatorUser = userRepository.save(creatorUser);
-        }
+        Creator creatorUser = toCreator(existingUser);
+        creatorUser.setRole(UserRole.CREATOR);
+        creatorUser.setCreatorId(creatorUser.getId());
+        creatorUser.setFollowersCount(creatorUser.getFollowers() == null ? 0 : creatorUser.getFollowers().size());
+        creatorUser.setFollowingCount(creatorUser.getFollowing() == null ? 0 : creatorUser.getFollowing().size());
 
-        final User finalCreatorUser = creatorUser;
-        creatorAnalyticsRepository.findByCreatorId(finalCreatorUser.getId())
+        CreatorAnalytics analytics = creatorAnalyticsRepository.findByCreatorId(creatorUser.getId())
             .orElseGet(() -> {
-                CreatorAnalytics analytics = new CreatorAnalytics();
-                analytics.setCreatorId(finalCreatorUser.getId());
-                return creatorAnalyticsRepository.save(analytics);
+                CreatorAnalytics created = new CreatorAnalytics();
+                created.setCreatorId(creatorUser.getId());
+                return creatorAnalyticsRepository.save(created);
             });
+        creatorUser.setAnalytics(analytics);
+
+        User finalCreatorUser = userRepository.save(creatorUser);
 
         refreshTokenService.revokeAllForUser(finalCreatorUser.getId());
 
@@ -247,6 +250,30 @@ public class UserServiceImpl implements UserService {
             finalCreatorUser.getRole().name(),
             finalCreatorUser.getHandle()
         );
+    }
+
+    private Creator toCreator(User user) {
+        if (user instanceof Creator creator) {
+            return creator;
+        }
+
+        Creator creator = new Creator();
+        creator.setId(user.getId());
+        creator.setUsername(user.getUsername());
+        creator.setHandle(user.getHandle());
+        creator.setEmail(user.getEmail());
+        creator.setPasswordHash(user.getPasswordHash());
+        creator.setProfilePhoto(user.getProfilePhoto());
+        creator.setBio(user.getBio());
+        creator.setAccountStatus(user.getAccountStatus());
+        creator.setRole(UserRole.CREATOR);
+        creator.setFollowers(user.getFollowers());
+        creator.setFollowing(user.getFollowing());
+        creator.setCreatedAt(user.getCreatedAt());
+        creator.setUpdatedAt(user.getUpdatedAt());
+        creator.setLastNotificationType(user.getLastNotificationType());
+        creator.setLastNotificationAt(user.getLastNotificationAt());
+        return creator;
     }
 
     private UserProfileDto toUserProfile(User user) {

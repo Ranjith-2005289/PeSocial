@@ -14,7 +14,7 @@ public interface PostService {
     Post editPost(String postId, EditPostRequest request);
     void deletePost(String postId, String userId);
     Post addLike(String postId, String currentUserId);
-    Post removeLike(String postId);
+    Post removeLike(String postId, String currentUserId);
     Post addComment(String postId, String comment, String currentUserId);
     Post sharePost(String postId);
     List<Post> getUserPosts(String authorId, String viewerId);

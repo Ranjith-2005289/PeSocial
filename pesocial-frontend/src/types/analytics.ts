@@ -5,5 +5,6 @@ export interface CreatorAnalytics {
   totalLikes: number
   totalShares: number
   followersCount: number
+  followingCount: number
   engagementRate: number
 }

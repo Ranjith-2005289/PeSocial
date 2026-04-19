@@ -10,6 +10,8 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import com.pesocial.model.notification.NotificationType;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -63,6 +65,12 @@ public abstract class User {
     @Field("updated_at")
     private Instant updatedAt = Instant.now();
 
+    @Field("last_notification_type")
+    private String lastNotificationType;
+
+    @Field("last_notification_at")
+    private Instant lastNotificationAt;
+
     public void follow(String userId) {
         following.add(userId);
         updatedAt = Instant.now();
@@ -97,6 +105,12 @@ public abstract class User {
 
     public void deleteAccount() {
         this.accountStatus = "DELETED";
+        this.updatedAt = Instant.now();
+    }
+
+    public void receiveNotification(NotificationType type) {
+        this.lastNotificationType = type == null ? null : type.name();
+        this.lastNotificationAt = Instant.now();
         this.updatedAt = Instant.now();
     }
 

@@ -9,6 +9,7 @@ interface PostCardProps {
   onLike: (postId: string) => Promise<void>
   onComment: (postId: string, value: string) => Promise<void>
   onDelete: (postId: string) => Promise<void>
+  onShare: (post: Post) => Promise<void>
 }
 
 const formatDate = (value: string) => {
@@ -19,10 +20,11 @@ const formatDate = (value: string) => {
   return date.toLocaleString()
 }
 
-export default function PostCard({ post, currentUserId, currentUserRole, onLike, onComment, onDelete }: PostCardProps) {
+export default function PostCard({ post, currentUserId, currentUserRole, onLike, onComment, onDelete, onShare }: PostCardProps) {
   const [commentText, setCommentText] = useState('')
   const [commenting, setCommenting] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [sharing, setSharing] = useState(false)
 
   const submitComment = async () => {
     if (!commentText.trim()) {
@@ -54,6 +56,15 @@ export default function PostCard({ post, currentUserId, currentUserRole, onLike,
       await onDelete(post.id)
     } finally {
       setDeleting(false)
+    }
+  }
+
+  const sharePost = async () => {
+    setSharing(true)
+    try {
+      await onShare(post)
+    } finally {
+      setSharing(false)
     }
   }
 
@@ -98,6 +109,14 @@ export default function PostCard({ post, currentUserId, currentUserRole, onLike,
           className="rounded-lg border border-white/30 px-3 py-1 text-sm hover:bg-white/10"
         >
           Like ({post.likesCount})
+        </button>
+
+        <button
+          onClick={() => void sharePost()}
+          disabled={sharing}
+          className="rounded-lg border border-white/30 px-3 py-1 text-sm hover:bg-white/10 disabled:opacity-60"
+        >
+          {sharing ? 'Sharing...' : `Share (${post.sharesCount})`}
         </button>
 
         <input

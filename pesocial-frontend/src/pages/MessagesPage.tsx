@@ -50,6 +50,10 @@ const resolveAttachmentUrl = (attachmentUrl?: string) => {
     return attachmentUrl
   }
 
+  if (attachmentUrl.startsWith('data:')) {
+    return attachmentUrl
+  }
+
   if (/^https?:\/\//i.test(attachmentUrl)) {
     return attachmentUrl
   }
@@ -59,6 +63,38 @@ const resolveAttachmentUrl = (attachmentUrl?: string) => {
   }
 
   return `${API_BASE_URL}/api/media/${attachmentUrl}`
+}
+
+const isSharedPostMessage = (messageText?: string, attachmentType?: string) => {
+  return attachmentType === 'shared-post' || Boolean(messageText?.startsWith('[SHARED_POST]'))
+}
+
+const parseSharedPostMessage = (messageText?: string) => {
+  const lines = (messageText ?? '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+
+  const data = {
+    sharedBy: '',
+    author: '',
+    caption: '',
+    postId: '',
+  }
+
+  for (const line of lines) {
+    if (line.startsWith('Shared by:')) {
+      data.sharedBy = line.replace('Shared by:', '').trim()
+    } else if (line.startsWith('Author:')) {
+      data.author = line.replace('Author:', '').trim()
+    } else if (line.startsWith('Caption:')) {
+      data.caption = line.replace('Caption:', '').trim()
+    } else if (line.startsWith('Post ID:')) {
+      data.postId = line.replace('Post ID:', '').trim()
+    }
+  }
+
+  return data
 }
 
 export default function MessagesPage() {
@@ -667,10 +703,43 @@ export default function MessagesPage() {
                   className={`flex ${mine ? 'justify-end' : 'justify-start'}`}
                 >
                   <div className={`max-w-[70%] rounded-2xl px-4 py-3 ${mine ? 'bg-sky-500 text-white' : 'bg-white/10 text-white'}`}>
-                    {message.attachmentUrl && (
-                      <img src={resolveAttachmentUrl(message.attachmentUrl)} alt="attachment" className="mb-2 max-h-64 rounded-xl object-cover" />
+                    {isSharedPostMessage(message.messageText, message.attachmentType) ? (
+                      (() => {
+                        const sharedPost = parseSharedPostMessage(message.messageText)
+                        return (
+                          <div className="rounded-xl border border-white/15 bg-black/20 p-3">
+                            <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-widest text-cyan-200">
+                              <span>📎</span>
+                              <span>Shared post</span>
+                            </div>
+
+                            {message.attachmentUrl ? (
+                              <img
+                                src={resolveAttachmentUrl(message.attachmentUrl)}
+                                alt="shared post media"
+                                className="mb-3 max-h-64 w-full rounded-xl object-cover"
+                                onError={(event) => {
+                                  const target = event.currentTarget
+                                  target.style.display = 'none'
+                                }}
+                              />
+                            ) : null}
+
+                            <p className="text-sm font-semibold">{sharedPost.author || 'Shared post'}</p>
+                            <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-white/90">{sharedPost.caption || 'No caption'}</p>
+                            <p className="mt-2 text-xs text-white/60">Post ID: {sharedPost.postId || 'unknown'}</p>
+                            {sharedPost.sharedBy && <p className="mt-1 text-xs text-white/60">Shared by: {sharedPost.sharedBy}</p>}
+                          </div>
+                        )
+                      })()
+                    ) : (
+                      <>
+                        {message.attachmentUrl && (
+                          <img src={resolveAttachmentUrl(message.attachmentUrl)} alt="attachment" className="mb-2 max-h-64 rounded-xl object-cover" />
+                        )}
+                        <p className="text-sm leading-relaxed whitespace-pre-line">{message.messageText || message.content}</p>
+                      </>
                     )}
-                    <p className="text-sm leading-relaxed">{message.messageText || message.content}</p>
                     {reaction && <div className="mt-2 text-right text-lg">{reaction}</div>}
                   </div>
                 </div>

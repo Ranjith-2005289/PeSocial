@@ -77,7 +77,7 @@ public class PostController {
     @PatchMapping("/{postId}/unlike")
     @CheckVisibility
     public ResponseEntity<PostResponseDto> unlike(@PathVariable String postId) {
-        return ResponseEntity.ok(postService.toResponse(postService.removeLike(postId)));
+        return ResponseEntity.ok(postService.toResponse(postService.removeLike(postId, currentViewerId())));
     }
 
     @PatchMapping("/{postId}/comment")

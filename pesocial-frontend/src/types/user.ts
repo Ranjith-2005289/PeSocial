@@ -7,6 +7,8 @@ export interface User {
   username?: string
   email: string
   role: UserRole
+  accountStatus?: 'ACTIVE' | 'SUSPENDED' | 'BANNED' | 'DELETED'
+  verificationStatus?: boolean
   profilePhoto?: string
   bio?: string
   followersCount?: number

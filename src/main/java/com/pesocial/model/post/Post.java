@@ -2,7 +2,9 @@ package com.pesocial.model.post;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -41,6 +43,9 @@ public class Post {
     @Field("likes_count")
     private int likesCount;
 
+    @Field("liked_by")
+    private Set<String> likedBy = new HashSet<>();
+
     @Field("shares_count")
     private int sharesCount;
 
@@ -61,16 +66,30 @@ public class Post {
         this.updatedAt = Instant.now();
     }
 
-    public void addLike() {
+    public boolean addLike(String userId) {
+        if (userId == null || userId.isBlank()) {
+            return false;
+        }
+        boolean added = likedBy.add(userId);
+        if (!added) {
+            return false;
+        }
         likesCount++;
         updatedAt = Instant.now();
+        return true;
     }
 
-    public void removeLike() {
-        if (likesCount > 0) {
-            likesCount--;
+    public boolean removeLike(String userId) {
+        if (userId == null || userId.isBlank()) {
+            return false;
         }
+        boolean removed = likedBy.remove(userId);
+        if (!removed) {
+            return false;
+        }
+        likesCount = Math.max(0, likesCount - 1);
         updatedAt = Instant.now();
+        return true;
     }
 
     public void addComment(String comment) {
