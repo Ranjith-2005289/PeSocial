@@ -92,8 +92,10 @@ public class Post {
         return true;
     }
 
-    public void addComment(String comment) {
-        comments.add(comment);
+    public void addComment(String userId, String comment) {
+        String normalizedUserId = userId == null || userId.isBlank() ? "unknown-user" : userId.trim();
+        String normalizedComment = comment == null ? "" : comment.trim();
+        comments.add(normalizedUserId + "|||" + normalizedComment);
         updatedAt = Instant.now();
     }
 

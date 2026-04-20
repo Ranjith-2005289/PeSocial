@@ -133,11 +133,17 @@ public class PostServiceImpl implements PostService {
     public Post addComment(String postId, String comment, String currentUserId) {
         Post post = postRepository.findById(postId)
             .orElseThrow(() -> new EntityNotFoundException("Post not found"));
-        post.addComment(comment);
+        User currentUser = userRepository.findById(currentUserId).orElse(null);
+        String commenterLabel = currentUser != null
+            ? (currentUser.getHandle() != null && !currentUser.getHandle().isBlank()
+                ? currentUser.getHandle()
+                : currentUser.getUsername())
+            : currentUserId;
+
+        post.addComment(commenterLabel, comment);
         Post saved = postRepository.save(post);
 
         // Get current user (who is commenting) and post author (recipient)
-        User currentUser = userRepository.findById(currentUserId).orElse(null);
         User author = userRepository.findById(saved.getAuthorId()).orElse(null);
         
         // Send notification to post author about who commented on their post

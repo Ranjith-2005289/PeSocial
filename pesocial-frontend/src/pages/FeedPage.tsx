@@ -31,7 +31,7 @@ export default function FeedPage() {
   const [shareModalOpen, setShareModalOpen] = useState(false)
   const [postToShare, setPostToShare] = useState<import('../types/post').Post | null>(null)
 
-  const { connected, notifications } = useWebSockets({ enabled: true })
+  const { notifications } = useWebSockets({ enabled: true })
 
   const notificationsQuery = useQuery({
     queryKey: ['notifications', user?.id],
@@ -251,11 +251,7 @@ export default function FeedPage() {
           </div>
         </div>
 
-        <div className="mt-3 flex items-center gap-4 text-xs text-white/75">
-          <span className={`h-2.5 w-2.5 rounded-full ${connected ? 'bg-emerald-400' : 'bg-rose-400'}`} />
-          <span>Realtime: {connected ? 'Connected' : 'Disconnected'}</span>
-          <span>Notifications: {unreadNotifications}</span>
-        </div>
+        <div className="mt-3 flex items-center gap-4 text-xs text-white/75" />
       </header>
 
       <CreatePost
@@ -308,6 +304,7 @@ export default function FeedPage() {
               key={post.id}
               post={post}
               currentUserId={user.id}
+              currentUserHandle={user.handle}
               currentUserRole={user.role}
               onLike={(postId) => likeMutation.mutateAsync(postId).then(() => undefined)}
               onComment={(postId, value) => commentMutation.mutateAsync({ postId, value }).then(() => undefined)}
