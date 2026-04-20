@@ -54,27 +54,6 @@ public class Notification {
         return new Builder(recipientId, senderHandle, type);
     }
 
-    public static Notification follow(String recipientId, String senderHandle) {
-        return builder(recipientId, senderHandle, NotificationType.FOLLOW).build();
-    }
-
-    public static Notification message(String recipientId, String senderHandle) {
-        return builder(recipientId, senderHandle, NotificationType.MESSAGE).build();
-    }
-
-    public static Notification like(String recipientId, String senderHandle, String postId) {
-        return builder(recipientId, senderHandle, NotificationType.LIKE)
-            .postId(postId)
-            .build();
-    }
-
-    public static Notification comment(String recipientId, String senderHandle, String postId, String commentText) {
-        return builder(recipientId, senderHandle, NotificationType.COMMENT)
-            .postId(postId)
-            .commentText(commentText)
-            .build();
-    }
-
     public static final class Builder {
         private String id;
         private final String recipientId;

@@ -7,6 +7,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import com.pesocial.dto.notification.CreateNotificationRequest;
+import com.pesocial.factory.NotificationFactory;
 import com.pesocial.model.notification.Notification;
 import com.pesocial.model.notification.NotificationType;
 import com.pesocial.model.system.SystemService;
@@ -21,22 +22,27 @@ public class NotificationServiceImpl implements NotificationService {
     private final UserRepository userRepository;
     private final SimpMessagingTemplate messagingTemplate;
     private final SystemService systemService;
+    private final NotificationFactory notificationFactory;
 
     public NotificationServiceImpl(NotificationRepository notificationRepository,
                                    UserRepository userRepository,
                                    SimpMessagingTemplate messagingTemplate,
-                                   SystemService systemService) {
+                                   SystemService systemService,
+                                   NotificationFactory notificationFactory) {
         this.notificationRepository = notificationRepository;
         this.userRepository = userRepository;
         this.messagingTemplate = messagingTemplate;
         this.systemService = systemService;
+        this.notificationFactory = notificationFactory;
     }
 
     @Override
     public Notification sendNotification(CreateNotificationRequest request) {
-        Notification notification = Notification
-            .builder(request.recipientId(), request.senderHandle(), request.type())
-            .build();
+        Notification notification = notificationFactory.createNotification(
+            request.recipientId(),
+            request.senderHandle(),
+            request.type()
+        );
         return saveNotification(notification, true);
     }
 
@@ -52,7 +58,7 @@ public class NotificationServiceImpl implements NotificationService {
             return recentFollowNotifications.get(0);
         }
 
-        return saveNotification(Notification.follow(recipientId, senderHandle), true);
+        return saveNotification(notificationFactory.createFollowNotification(recipientId, senderHandle), true);
     }
 
     @Override
@@ -67,13 +73,13 @@ public class NotificationServiceImpl implements NotificationService {
             return recentLikeNotifications.get(0);
         }
 
-        Notification notification = Notification.like(recipientId, senderHandle, postId);
+        Notification notification = notificationFactory.createLikeNotification(recipientId, senderHandle, postId);
         return saveNotification(notification, false);
     }
 
     @Override
     public Notification sendCommentNotification(String recipientId, String senderHandle, String postId, String commentText) {
-        Notification notification = Notification.comment(recipientId, senderHandle, postId, commentText);
+        Notification notification = notificationFactory.createCommentNotification(recipientId, senderHandle, postId, commentText);
         return saveNotification(notification, false);
     }
 
@@ -88,7 +94,7 @@ public class NotificationServiceImpl implements NotificationService {
             return recentMessageNotifications.get(0);
         }
 
-        return saveNotification(Notification.message(recipientId, senderHandle), true);
+        return saveNotification(notificationFactory.createMessageNotification(recipientId, senderHandle), true);
     }
 
     @Override

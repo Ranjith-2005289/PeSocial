@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
+import com.pesocial.factory.PostFactory;
 import com.pesocial.model.Story;
 import com.pesocial.model.analytics.CreatorAnalytics;
 import com.pesocial.model.post.Post;
@@ -21,15 +22,18 @@ import com.pesocial.service.CreatorService;
 public class CreatorServiceImpl implements CreatorService {
 
     private final PostRepository postRepository;
+    private final PostFactory postFactory;
     private final UserRepository userRepository;
     private final CreatorAnalyticsRepository creatorAnalyticsRepository;
     private final StoryRepository storyRepository;
 
     public CreatorServiceImpl(PostRepository postRepository,
+                              PostFactory postFactory,
                               UserRepository userRepository,
                               CreatorAnalyticsRepository creatorAnalyticsRepository,
                               StoryRepository storyRepository) {
         this.postRepository = postRepository;
+        this.postFactory = postFactory;
         this.userRepository = userRepository;
         this.creatorAnalyticsRepository = creatorAnalyticsRepository;
         this.storyRepository = storyRepository;
@@ -41,7 +45,7 @@ public class CreatorServiceImpl implements CreatorService {
             throw new IllegalArgumentException("Post payload is required");
         }
 
-        Post normalized = Post.createFeedPost(
+        Post normalized = postFactory.createFeedPost(
             post.getAuthorId(),
             post.getContentText(),
             post.getMedia(),
@@ -58,7 +62,7 @@ public class CreatorServiceImpl implements CreatorService {
             throw new IllegalArgumentException("Post payload is required");
         }
 
-        Post exclusive = Post.createExclusiveCreatorPost(
+        Post exclusive = postFactory.createExclusiveCreatorPost(
             post.getAuthorId(),
             post.getContentText(),
             post.getMedia(),

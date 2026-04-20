@@ -78,24 +78,6 @@ public class Post {
         this.updatedAt = builder.updatedAt;
     }
 
-    public static Post createFeedPost(String authorId, String contentText, MediaUrl media, String mediaType, String visibility) {
-        return builder(authorId)
-            .contentText(contentText)
-            .media(media)
-            .mediaType(mediaType)
-            .visibility(visibility)
-            .build();
-    }
-
-    public static Post createExclusiveCreatorPost(String authorId, String contentText, MediaUrl media, String mediaType) {
-        return builder(authorId)
-            .contentText(contentText)
-            .media(media)
-            .mediaType(mediaType)
-            .visibility("EXCLUSIVE")
-            .build();
-    }
-
     public static Builder builder(String authorId) {
         return new Builder(authorId);
     }

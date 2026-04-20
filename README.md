@@ -80,11 +80,11 @@ Yes, mostly.
 7. **AOP Pattern (Cross-cutting Security Rule)**
    - `@CheckVisibility` + `PostVisibilityAspect`.
 
-8. **Creational Pattern #1: Static Factory Method**
-   - `Post.createFeedPost(...)` creates a normalized post for standard timeline publishing.
-   - `Post.createExclusiveCreatorPost(...)` creates monetized/exclusive creator content.
-   - `Notification.follow(...)`, `Notification.message(...)`, `Notification.like(...)`, `Notification.comment(...)` create type-safe notifications.
-   - Why this fits a social app: social events are high-volume and semantic (feed post, exclusive post, like, comment, follow, message). Named factories encode intent and prevent invalid object combinations at creation time.
+8. **Creational Pattern #1: Factory Class**
+   - `PostFactory` creates normalized feed posts and exclusive creator posts.
+   - `NotificationFactory` creates type-safe follow/message/like/comment notifications.
+   - Service layer depends on these factory classes instead of directly constructing domain objects.
+   - Why this fits a social app: social events are high-volume and semantic (feed post, exclusive post, like, comment, follow, message). Factory classes centralize creation intent and prevent invalid object combinations at creation time.
 
 9. **Creational Pattern #2: Builder**
    - `Post.builder(authorId)...build()` handles optional media, text, visibility, timestamps, and payload validation.
@@ -97,7 +97,7 @@ Yes, mostly.
 
 Creational pattern scope note:
 
-- We intentionally keep creational patterns limited to exactly these two (`Static Factory Method` and `Builder`) and avoid introducing other creational patterns.
+- We intentionally keep creational patterns limited to exactly these two (`Factory Class` and `Builder`) and avoid introducing other creational patterns.
 
 ---
 

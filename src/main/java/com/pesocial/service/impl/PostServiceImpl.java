@@ -13,6 +13,7 @@ import com.pesocial.dto.post.EditPostRequest;
 import com.pesocial.dto.post.PostResponseDto;
 import com.pesocial.exception.AccessDeniedException;
 import com.pesocial.exception.EntityNotFoundException;
+import com.pesocial.factory.PostFactory;
 import com.pesocial.model.post.Post;
 import com.pesocial.model.user.User;
 import com.pesocial.model.user.UserRole;
@@ -26,17 +27,20 @@ import com.pesocial.service.feed.FeedPublisher;
 public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
+    private final PostFactory postFactory;
     private final FeedPublisher feedPublisher;
     private final UserRepository userRepository;
     private final GridFsTemplate gridFsTemplate;
     private final NotificationService notificationService;
 
     public PostServiceImpl(PostRepository postRepository,
+                           PostFactory postFactory,
                            FeedPublisher feedPublisher,
                            UserRepository userRepository,
                            GridFsTemplate gridFsTemplate,
                            NotificationService notificationService) {
         this.postRepository = postRepository;
+        this.postFactory = postFactory;
         this.feedPublisher = feedPublisher;
         this.userRepository = userRepository;
         this.gridFsTemplate = gridFsTemplate;
@@ -45,7 +49,7 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public Post createPost(CreatePostRequest request) {
-        Post post = Post.createFeedPost(
+        Post post = postFactory.createFeedPost(
             request.authorId(),
             request.contentText(),
             request.media(),
