@@ -47,28 +47,35 @@ Yes, mostly.
 
 ## 3) Design Patterns Present in Backend
 
-1. **Layered Architecture**
-   - Packages: `controller`, `service`, `repository`, `model`, `dto`.
+1. **MVC Architecture Pattern**
+   - **Model**: Domain entities in `model/` package (User, Post, Story, Message, ChatRoom, Notification, CreatorAnalytics, etc.).
+   - **View**: Response DTOs in `dto/` package (PostResponseDto, UserProfileDto, MessageDTO, etc.) + JSON serialization via Spring.
+   - **Controller**: REST controllers in `controller/` package handle HTTP requests and delegate to services.
+   - **Flow**: HTTP Request → Controller → Service (business logic) → Repository (data access) → Model → DTO → Response.
 
-2. **Repository Pattern**
+2. **Layered Architecture**
+   - Packages: `controller`, `service`, `repository`, `model`, `dto`.
+   - Clean separation: Presentation (Controller) → Business Logic (Service) → Data Access (Repository) → Domain (Model).
+
+3. **Repository Pattern**
    - Spring Data repositories + custom query repository (`PostQueryRepositoryImpl`).
 
-3. **Service Layer Pattern**
+4. **Service Layer Pattern**
    - Business logic concentrated in `service/impl` classes.
 
-4. **Strategy Pattern**
+5. **Strategy Pattern**
    - `NotificationStrategy` + `InAppNotificationStrategy` + `EmailNotificationStrategy` + `NotificationContext`.
 
-5. **Observer Pattern**
+6. **Observer Pattern**
    - `FeedPublisher` + `FollowerObserver` + `FeedNotificationObserver`.
 
-6. **AOP Pattern (Cross-cutting Security Rule)**
+7. **AOP Pattern (Cross-cutting Security Rule)**
    - `@CheckVisibility` + `PostVisibilityAspect`.
 
-7. **Static Factory Style**
+8. **Static Factory Style**
    - `MediaUrl.gridFs(...)` and `MediaUrl.external(...)`.
 
-8. **Centralized Exception Handling**
+9. **Centralized Exception Handling**
    - `GlobalExceptionHandler` with domain exceptions.
 
 ---

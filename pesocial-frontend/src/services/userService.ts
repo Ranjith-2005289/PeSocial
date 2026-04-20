@@ -3,6 +3,11 @@ import type { MyProfile, User, UserSummary } from '../types/user'
 import api from './api'
 
 export const userService = {
+  getUserProfile: async (userId: string) => {
+    const { data } = await api.get<User>(`/api/users/${encodeURIComponent(userId)}`)
+    return data
+  },
+
   searchUsers: async (handle: string) => {
     const { data } = await api.get<User[]>('/api/users/search', {
       params: { handle },
