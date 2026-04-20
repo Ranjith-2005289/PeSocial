@@ -72,11 +72,22 @@ Yes, mostly.
 7. **AOP Pattern (Cross-cutting Security Rule)**
    - `@CheckVisibility` + `PostVisibilityAspect`.
 
-8. **Static Factory Style**
-   - `MediaUrl.gridFs(...)` and `MediaUrl.external(...)`.
+8. **Creational Pattern #1: Static Factory Method**
+   - `Post.createFeedPost(...)` creates a normalized post for standard timeline publishing.
+   - `Post.createExclusiveCreatorPost(...)` creates monetized/exclusive creator content.
+   - `Notification.follow(...)`, `Notification.message(...)`, `Notification.like(...)`, `Notification.comment(...)` create type-safe notifications.
+   - Why this fits a social app: social events are high-volume and semantic (feed post, exclusive post, like, comment, follow, message). Named factories encode intent and prevent invalid object combinations at creation time.
 
-9. **Centralized Exception Handling**
+9. **Creational Pattern #2: Builder**
+   - `Post.builder(authorId)...build()` handles optional media, text, visibility, timestamps, and payload validation.
+   - `Notification.builder(recipientId, senderHandle, type)...build()` handles optional post/comment context while enforcing type constraints.
+   - Why this fits a social app: post and notification payloads have many optional fields and evolving attributes. Builder keeps object creation readable and safe without large telescoping constructors.
+
+10. **Centralized Exception Handling**
    - `GlobalExceptionHandler` with domain exceptions.
+
+Creational pattern scope note:
+- We intentionally keep creational patterns limited to exactly these two (`Static Factory Method` and `Builder`) and avoid introducing other creational patterns.
 
 ---
 

@@ -100,7 +100,6 @@ const parseSharedPostMessage = (messageText?: string) => {
 export default function MessagesPage() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
-  const currentUserHandle = user?.handle || (user?.username ? `@${user.username}` : '@PESocial')
   const [selectedChatRoomId, setSelectedChatRoomId] = useState<string | null>(null)
   const [selectedOtherUser, setSelectedOtherUser] = useState<UserSummary | null>(null)
   const [messageText, setMessageText] = useState('')
@@ -122,7 +121,7 @@ export default function MessagesPage() {
   const localVideoRef = useRef<HTMLVideoElement | null>(null)
   const remoteVideoRef = useRef<HTMLVideoElement | null>(null)
 
-  const { connected, directMessages, callSignals, sendTyping, sendCallSignal } = useWebSockets({ enabled: true })
+  const { directMessages, callSignals, sendTyping, sendCallSignal } = useWebSockets({ enabled: true })
 
   const chatRoomsQuery = useQuery({
     queryKey: ['chat-rooms'],
@@ -527,7 +526,6 @@ export default function MessagesPage() {
         <div>
           <p className="text-xs uppercase tracking-widest text-white/60">Messaging Hub</p>
           <h1 className="text-2xl font-semibold">PESocial Direct</h1>
-          <p className="text-sm text-white/65">{connected ? 'Connected' : 'Disconnected'} · {currentUserHandle}</p>
         </div>
         <div className="w-full max-w-md">
           <input

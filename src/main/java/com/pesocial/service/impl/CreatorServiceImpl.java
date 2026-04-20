@@ -37,13 +37,35 @@ public class CreatorServiceImpl implements CreatorService {
 
     @Override
     public Post uploadPost(Post post) {
-        return postRepository.save(post);
+        if (post == null) {
+            throw new IllegalArgumentException("Post payload is required");
+        }
+
+        Post normalized = Post.createFeedPost(
+            post.getAuthorId(),
+            post.getContentText(),
+            post.getMedia(),
+            post.getMediaType(),
+            post.getVisibility()
+        );
+
+        return postRepository.save(normalized);
     }
 
     @Override
     public Post uploadExclusivePost(Post post) {
-        post.setVisibility("EXCLUSIVE");
-        return postRepository.save(post);
+        if (post == null) {
+            throw new IllegalArgumentException("Post payload is required");
+        }
+
+        Post exclusive = Post.createExclusiveCreatorPost(
+            post.getAuthorId(),
+            post.getContentText(),
+            post.getMedia(),
+            post.getMediaType()
+        );
+
+        return postRepository.save(exclusive);
     }
 
     @Override

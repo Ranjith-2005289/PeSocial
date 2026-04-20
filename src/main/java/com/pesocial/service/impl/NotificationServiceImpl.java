@@ -34,21 +34,10 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public Notification sendNotification(CreateNotificationRequest request) {
-        Notification notification = new Notification();
-        notification.setRecipientId(request.recipientId());
-        notification.setSenderHandle(request.senderHandle());
-        notification.setType(request.type());
-        notification.setTimestamp(Instant.now());
-
-        Notification saved = notificationRepository.save(notification);
-        userRepository.findById(request.recipientId()).ifPresent(recipient -> {
-            recipient.receiveNotification(request.type());
-            userRepository.save(recipient);
-        });
-        systemService.generateNotifications();
-        systemService.logActivity();
-        pushRealtimeNotification(saved);
-        return saved;
+        Notification notification = Notification
+            .builder(request.recipientId(), request.senderHandle(), request.type())
+            .build();
+        return saveNotification(notification, true);
     }
 
     @Override
@@ -63,7 +52,7 @@ public class NotificationServiceImpl implements NotificationService {
             return recentFollowNotifications.get(0);
         }
 
-        return sendNotification(new CreateNotificationRequest(recipientId, senderHandle, NotificationType.FOLLOW));
+        return saveNotification(Notification.follow(recipientId, senderHandle), true);
     }
 
     @Override
@@ -78,31 +67,14 @@ public class NotificationServiceImpl implements NotificationService {
             return recentLikeNotifications.get(0);
         }
 
-        Notification notification = new Notification();
-        notification.setRecipientId(recipientId);
-        notification.setSenderHandle(senderHandle);
-        notification.setType(NotificationType.LIKE);
-        notification.setPostId(postId);
-        notification.setTimestamp(Instant.now());
-
-        Notification saved = notificationRepository.save(notification);
-        pushRealtimeNotification(saved);
-        return saved;
+        Notification notification = Notification.like(recipientId, senderHandle, postId);
+        return saveNotification(notification, false);
     }
 
     @Override
     public Notification sendCommentNotification(String recipientId, String senderHandle, String postId, String commentText) {
-        Notification notification = new Notification();
-        notification.setRecipientId(recipientId);
-        notification.setSenderHandle(senderHandle);
-        notification.setType(NotificationType.COMMENT);
-        notification.setPostId(postId);
-        notification.setCommentText(commentText);
-        notification.setTimestamp(Instant.now());
-
-        Notification saved = notificationRepository.save(notification);
-        pushRealtimeNotification(saved);
-        return saved;
+        Notification notification = Notification.comment(recipientId, senderHandle, postId, commentText);
+        return saveNotification(notification, false);
     }
 
     @Override
@@ -116,7 +88,7 @@ public class NotificationServiceImpl implements NotificationService {
             return recentMessageNotifications.get(0);
         }
 
-        return sendNotification(new CreateNotificationRequest(recipientId, senderHandle, NotificationType.MESSAGE));
+        return saveNotification(Notification.message(recipientId, senderHandle), true);
     }
 
     @Override
@@ -149,6 +121,22 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public long countUnread(String recipientId) {
         return notificationRepository.countByRecipientIdAndIsReadFalse(recipientId);
+    }
+
+    private Notification saveNotification(Notification notification, boolean updateRecipientState) {
+        Notification saved = notificationRepository.save(notification);
+
+        if (updateRecipientState) {
+            userRepository.findById(saved.getRecipientId()).ifPresent(recipient -> {
+                recipient.receiveNotification(saved.getType());
+                userRepository.save(recipient);
+            });
+            systemService.generateNotifications();
+            systemService.logActivity();
+        }
+
+        pushRealtimeNotification(saved);
+        return saved;
     }
 
     private void pushRealtimeNotification(Notification notification) {

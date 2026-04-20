@@ -45,14 +45,13 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public Post createPost(CreatePostRequest request) {
-        Post post = new Post();
-        post.setAuthorId(request.authorId());
-        post.setContentText(request.contentText());
-        post.setMedia(request.media());
-        post.setMediaType(request.mediaType());
-        if (request.visibility() != null && !request.visibility().isBlank()) {
-            post.setVisibility(request.visibility());
-        }
+        Post post = Post.createFeedPost(
+            request.authorId(),
+            request.contentText(),
+            request.media(),
+            request.mediaType(),
+            request.visibility()
+        );
 
         Post saved = postRepository.save(post);
         feedPublisher.publishPost(saved.getAuthorId(), saved.getId());
@@ -75,7 +74,12 @@ public class PostServiceImpl implements PostService {
         Post post = postRepository.findById(postId)
             .orElseThrow(() -> new EntityNotFoundException("Post not found"));
 
-        post.editPost(request.contentText(), request.media(), request.mediaType(), request.visibility());
+        String contentText = request.contentText() != null ? request.contentText() : post.getContentText();
+        var media = request.media() != null ? request.media() : post.getMedia();
+        String mediaType = request.mediaType() != null ? request.mediaType() : post.getMediaType();
+        String visibility = request.visibility() != null ? request.visibility() : post.getVisibility();
+
+        post.editPost(contentText, media, mediaType, visibility);
         return postRepository.save(post);
     }
 
