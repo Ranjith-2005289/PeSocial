@@ -7,9 +7,11 @@ This README is focused on backend architecture, structure, design principles, an
 ## 1) Direct Answer: Does this backend follow design principles and patterns?
 
 ### Verdict
+
 Yes, mostly.
 
 ### What is clearly good
+
 - Clean layered architecture: Controller -> Service -> Repository -> Model.
 - Strong use of interfaces for services (`*Service` + `*ServiceImpl`).
 - Constructor injection is used in most major services and controllers.
@@ -18,6 +20,7 @@ Yes, mostly.
 - Design patterns are present and demonstrable (listed below).
 
 ### What is not ideal (be honest in demo)
+
 - A few files still use field injection (`@Autowired`) instead of constructor injection.
 - Some story operations return `null` instead of throwing explicit exceptions.
 - A few controllers contain extra orchestration logic that could move to services.
@@ -27,19 +30,24 @@ Yes, mostly.
 ## 2) Design Principles Mapping (Demo Talking Points)
 
 ### SRP (Single Responsibility)
+
 - Good in `AuthController`, `PostController`, `PostServiceImpl`, `GlobalExceptionHandler`.
 - Weaker in `StoryController` and `MediaController` (multiple responsibilities in one class).
 
 ### OCP (Open/Closed)
+
 - Good in notification strategy setup (`NotificationStrategy`, `NotificationContext`) and feed observer flow (`FollowerObserver`, `FeedPublisher`).
 
 ### LSP (Liskov Substitution)
+
 - Service interfaces are substitutable with implementations (`UserService`/`UserServiceImpl`, `PostService`/`PostServiceImpl`, etc.).
 
 ### ISP (Interface Segregation)
+
 - Service interfaces are split by feature (auth/user/post/message/monetization/chat, etc.), avoiding one giant interface.
 
 ### DIP (Dependency Inversion)
+
 - Mostly followed via constructor-injected dependencies.
 - Exceptions: legacy field injection still exists in story/media area.
 
@@ -84,9 +92,11 @@ Yes, mostly.
    - Why this fits a social app: post and notification payloads have many optional fields and evolving attributes. Builder keeps object creation readable and safe without large telescoping constructors.
 
 10. **Centralized Exception Handling**
-   - `GlobalExceptionHandler` with domain exceptions.
+
+- `GlobalExceptionHandler` with domain exceptions.
 
 Creational pattern scope note:
+
 - We intentionally keep creational patterns limited to exactly these two (`Static Factory Method` and `Builder`) and avoid introducing other creational patterns.
 
 ---
@@ -110,9 +120,11 @@ Creational pattern scope note:
 ## 5) Backend Files One-by-One (Complete List + Purpose)
 
 ### A) Application Entry
+
 - `src/main/java/com/pesocial/PeSocialApplication.java` - Spring Boot entry point.
 
 ### B) Config Package
+
 - `src/main/java/com/pesocial/config/JwtAuthenticationFilter.java` - Validates JWT per request and populates Spring Security context.
 - `src/main/java/com/pesocial/config/JwtLogoutHandler.java` - Blacklists access token and revokes refresh token on logout.
 - `src/main/java/com/pesocial/config/OpenApiConfig.java` - Swagger/OpenAPI configuration with bearer auth schema.
@@ -122,6 +134,7 @@ Creational pattern scope note:
 - `src/main/java/com/pesocial/config/WebSocketHandlerConfig.java` - Registers raw websocket handler endpoint.
 
 ### C) Controller Package
+
 - `src/main/java/com/pesocial/controller/AdminController.java` - Admin APIs: moderation, reports, announcements.
 - `src/main/java/com/pesocial/controller/AuthController.java` - Auth APIs: register, login, refresh, logout-service.
 - `src/main/java/com/pesocial/controller/ChatRoomController.java` - Chat room APIs: create/get room, history, unread, archive/pin.
@@ -138,6 +151,7 @@ Creational pattern scope note:
 - `src/main/java/com/pesocial/controller/UserController.java` - User profile/follow/search/feed APIs and become-creator endpoint.
 
 ### D) DTO Package
+
 - `src/main/java/com/pesocial/dto/StoryDetailDTO.java` - Story view/analytics response payload.
 - `src/main/java/com/pesocial/dto/auth/AuthResponse.java` - Auth response containing tokens and user identity fields.
 - `src/main/java/com/pesocial/dto/auth/LoginRequest.java` - Login request payload.
@@ -160,12 +174,14 @@ Creational pattern scope note:
 - `src/main/java/com/pesocial/dto/user/UserSummaryDto.java` - Compact user response (id/handle/profilePhoto).
 
 ### E) Exception Package
+
 - `src/main/java/com/pesocial/exception/AccessDeniedException.java` - Domain-level forbidden access exception.
 - `src/main/java/com/pesocial/exception/EntityNotFoundException.java` - Domain-level missing-resource exception.
 - `src/main/java/com/pesocial/exception/GlobalExceptionHandler.java` - Maps exceptions to consistent HTTP error responses.
 - `src/main/java/com/pesocial/exception/InsufficientFundsException.java` - Domain exception for paywall/monetization access checks.
 
 ### F) Model Package
+
 - `src/main/java/com/pesocial/model/Story.java` - Story aggregate with timestamp, viewers, likes, and TTL behavior.
 - `src/main/java/com/pesocial/model/analytics/CreatorAnalytics.java` - Analytics aggregate and engagement computation.
 - `src/main/java/com/pesocial/model/guest/Guest.java` - Guest domain model.
@@ -188,6 +204,7 @@ Creational pattern scope note:
 - `src/main/java/com/pesocial/model/user/UserRole.java` - User role enum.
 
 ### G) Repository Package
+
 - `src/main/java/com/pesocial/repository/ChatRoomRepository.java` - Chat room persistence and custom room lookup methods.
 - `src/main/java/com/pesocial/repository/CreatorAnalyticsRepository.java` - Creator analytics persistence.
 - `src/main/java/com/pesocial/repository/MessageRepository.java` - Message persistence and unread/history queries.
@@ -203,12 +220,14 @@ Creational pattern scope note:
 - `src/main/java/com/pesocial/repository/UserRepository.java` - User lookup/search repository.
 
 ### H) Security Package
+
 - `src/main/java/com/pesocial/security/CheckVisibility.java` - Custom annotation to trigger post-visibility checks.
 - `src/main/java/com/pesocial/security/PostVisibilityAspect.java` - AOP aspect enforcing visibility before annotated methods.
 - `src/main/java/com/pesocial/security/SecurityUtils.java` - Helpers for current user and role checks.
 - `src/main/java/com/pesocial/security/TargetEntity.java` - Enum used by ownership checks.
 
 ### I) Service Interfaces
+
 - `src/main/java/com/pesocial/service/AdminService.java` - Admin use-case contract.
 - `src/main/java/com/pesocial/service/AuthService.java` - Auth use-case contract.
 - `src/main/java/com/pesocial/service/ChatRoomService.java` - Chat room use-case contract.
@@ -225,6 +244,7 @@ Creational pattern scope note:
 - `src/main/java/com/pesocial/service/UserService.java` - User/social graph/profile contract.
 
 ### J) Service Pattern Subpackages
+
 - `src/main/java/com/pesocial/service/feed/FollowerObserver.java` - Observer interface for feed publishing events.
 - `src/main/java/com/pesocial/service/feed/FeedPublisher.java` - Subject/publisher for new post events.
 - `src/main/java/com/pesocial/service/feed/FeedNotificationObserver.java` - Observer implementation that sends notifications on new posts.
@@ -237,6 +257,7 @@ Creational pattern scope note:
 - `src/main/java/com/pesocial/service/security/TokenBlocklistService.java` - Access-token blocklist contract.
 
 ### K) Service Implementations (`service/impl`)
+
 - `src/main/java/com/pesocial/service/impl/AdminServiceImpl.java` - Admin business logic implementation.
 - `src/main/java/com/pesocial/service/impl/AuthServiceImpl.java` - Register/login/refresh/logout implementation.
 - `src/main/java/com/pesocial/service/impl/ChatRoomServiceImpl.java` - Chat room orchestration and unread/history logic.
@@ -253,6 +274,7 @@ Creational pattern scope note:
 - `src/main/java/com/pesocial/service/impl/UserServiceImpl.java` - User profile, follow graph, creator conversion logic.
 
 ### L) Backend Resources and Tests
+
 - `src/main/resources/application.properties` - Runtime config (Mongo URI, JWT settings, monetization settings, OpenAPI paths).
 - `src/test/java/com/pesocial/PeSocialApplicationTests.java` - Spring Boot context-load test.
 
@@ -261,12 +283,14 @@ Creational pattern scope note:
 ## 6) Fast Q&A for Presentation
 
 ### Q: Which patterns can you demo live quickly?
+
 1. Strategy pattern (`service/notification`).
 2. Observer pattern (`service/feed`).
 3. AOP visibility enforcement (`security/PostVisibilityAspect`).
 4. Repository pattern with custom implementation (`PostQueryRepositoryImpl`).
 
 ### Q: Best files to open first in demo?
+
 1. `src/main/java/com/pesocial/config/SecurityConfig.java`
 2. `src/main/java/com/pesocial/controller/PostController.java`
 3. `src/main/java/com/pesocial/service/impl/PostServiceImpl.java`
@@ -277,6 +301,7 @@ Creational pattern scope note:
 8. `src/main/java/com/pesocial/service/feed/FeedPublisher.java`
 
 ### Q: Where to improve after demo?
+
 - Replace remaining field injection with constructor injection (`StoryController`, `StoryServiceImpl`, `MediaController`).
 - Replace `null` returns in story flows with explicit exceptions/results.
 - Move remaining heavy controller logic into service classes.
