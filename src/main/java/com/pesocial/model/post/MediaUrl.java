@@ -1,5 +1,5 @@
 package com.pesocial.model.post;
-
+//static factory
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import lombok.AllArgsConstructor;

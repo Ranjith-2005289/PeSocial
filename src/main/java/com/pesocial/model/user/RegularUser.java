@@ -1,5 +1,5 @@
 package com.pesocial.model.user;
-
+//lsp
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Field;
 

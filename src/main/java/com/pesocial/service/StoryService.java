@@ -1,5 +1,5 @@
 package com.pesocial.service;
-
+//isp
 import com.pesocial.dto.StoryDetailDTO;
 import com.pesocial.model.Story;
 import java.util.List;
