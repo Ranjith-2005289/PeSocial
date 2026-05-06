@@ -3,7 +3,7 @@ package com.pesocial.model.user;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.Field;
-
+//lsp
 import com.pesocial.model.analytics.CreatorAnalytics;
 
 import lombok.EqualsAndHashCode;

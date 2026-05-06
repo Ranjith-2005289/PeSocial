@@ -1,4 +1,5 @@
 package com.pesocial.service;
+//isp
 
 import com.pesocial.dto.auth.AuthResponse;
 import com.pesocial.dto.auth.LoginRequest;
@@ -11,4 +12,4 @@ public interface AuthService {
     AuthResponse login(LoginRequest request);
     AuthResponse refresh(RefreshTokenRequest request);
     void logout(LogoutRequest request);
-}x
+}
